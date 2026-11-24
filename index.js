@@ -36,11 +36,13 @@ You are Supi, a friendly real-time AI voice assistant. Speak naturally in Bengal
 `;
 
 // Hosted Supi app and server status.
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/app.js", (_req, res) => res.sendFile(path.join(__dirname, "app.js")));
+app.get("/style.css", (_req, res) => res.sendFile(path.join(__dirname, "style.css")));
 app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "Master", activeSessions: activeSessions.size }));
 app.get("/healthz", (_req, res) => res.json({ ok: true, service: "supi-live", activeSessions: activeSessions.size }));
 app.get("/api/status", (_req, res) => res.json({ online: true, assistant: "Supi", creator: "Master", liveVoice: Boolean(API_KEY) }));
-app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
+
 
 // Text chat remains available alongside the Live voice session.
 app.post("/api/chat", async (req, res) => {
