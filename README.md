@@ -1,1 +1,16 @@
-# Ai-free-
+# Supi Live AI Server
+
+Supi's hosted web UI and live voice relay. The Gemini API key remains in Render's server environment and is never sent to the app. Existing text chat and memory routes are retained with Supi identity.
+
+## Render environment variables
+
+Keep the current `GEMINI_API_KEY`. Optional settings:
+
+- `GEMINI_MODEL` — text chat model (existing setting).
+- `LIVE_MODEL` — defaults to `models/gemini-3.1-flash-live-preview`.
+- `SUPI_CLIENT_TOKEN` — optional shared app gate; if set, enter it in Supi settings.
+- `MAX_SESSIONS` — defaults to 20.
+- `MAX_SESSION_MINUTES` — defaults to 10.
+- `PORT` — assigned by Render.
+
+Render can deploy this repository automatically after changes reach the connected branch. Health checks are available at `/health` and `/healthz`; the WebSocket endpoint is `/live`.

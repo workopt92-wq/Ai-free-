@@ -1,8 +1,7 @@
-
 {
-  "name": "jarvis-master-server",
+  "name": "supi-live-server",
   "version": "1.0.0",
-  "description": "Jarvis AI backend for Master",
+  "description": "Supi Live AI voice assistant server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -13,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.0.0",
     "express": "^5.0.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "ws": "^8.18.3"
   }
 }
