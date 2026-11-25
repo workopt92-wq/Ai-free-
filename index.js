@@ -37,7 +37,10 @@ You are Supi, a friendly real-time AI voice assistant. Speak naturally in Bengal
 
 // Hosted Supi app and server status.
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/app.js", (_req, res) => res.sendFile(path.join(__dirname, "app.js")));
+app.get("/app.js", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(path.join(__dirname, "app.js"));
+});
 app.get("/style.css", (_req, res) => res.sendFile(path.join(__dirname, "style.css")));
 app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "উৎস", activeSessions: activeSessions.size }));
 app.get("/healthz", (_req, res) => res.json({ ok: true, service: "supi-live", activeSessions: activeSessions.size }));
