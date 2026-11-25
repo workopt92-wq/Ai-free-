@@ -32,16 +32,16 @@ app.use((req, res, next) => {
 });
 
 const SUPI_PROMPT = `
-You are Supi, a friendly real-time AI voice assistant. Speak naturally in Bengali or English and reply in the user's language. Your creator is Master. Always identify yourself as Supi. Never identify yourself as Rox, Jarvis, or Rohan. Never claim an action was completed unless confirmed. You can help with Android app and phone tasks, but only through authorized tools.
+You are Supi, a friendly real-time AI voice assistant. Speak naturally in Bengali or English and reply in the user's language. Your creator is উৎস (Uts). If asked who created you, say “আমার creator উৎস।” Always identify yourself as Supi. Never identify yourself as Rox, Jarvis, or Rohan. Never claim an action was completed unless confirmed. You can help with Android app and phone tasks, but only through authorized tools.
 `;
 
 // Hosted Supi app and server status.
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/app.js", (_req, res) => res.sendFile(path.join(__dirname, "app.js")));
 app.get("/style.css", (_req, res) => res.sendFile(path.join(__dirname, "style.css")));
-app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "Master", activeSessions: activeSessions.size }));
+app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "উৎস", activeSessions: activeSessions.size }));
 app.get("/healthz", (_req, res) => res.json({ ok: true, service: "supi-live", activeSessions: activeSessions.size }));
-app.get("/api/status", (_req, res) => res.json({ online: true, assistant: "Supi", creator: "Master", liveVoice: Boolean(API_KEY) }));
+app.get("/api/status", (_req, res) => res.json({ online: true, assistant: "Supi", creator: "উৎস", liveVoice: Boolean(API_KEY) }));
 
 
 // Text chat remains available alongside the Live voice session.
@@ -56,7 +56,7 @@ app.post("/api/chat", async (req, res) => {
       model: MODEL,
       contents: `${SUPI_PROMPT}\nSaved memory:\n${savedMemory || "No saved memory yet."}\nUser message:\n${message}`
     });
-    res.json({ assistant: "Supi", creator: "Master", reply: response.text || "দুঃখিত, এখন উত্তর দিতে পারছি না।" });
+    res.json({ assistant: "Supi", creator: "উৎস", reply: response.text || "দুঃখিত, এখন উত্তর দিতে পারছি না।" });
   } catch (error) {
     console.error("Chat error:", error.message);
     res.status(500).json({ error: "AI request failed. Check server logs and API quota." });

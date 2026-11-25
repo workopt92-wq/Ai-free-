@@ -1,6 +1,6 @@
 # Supi Live AI Server
 
-Supi's hosted web UI and live voice relay. The Gemini API key remains in Render's server environment and is never sent to the app. Existing text chat and memory routes are retained with Supi identity.
+Supi's hosted web UI and live voice relay. Supi identifies itself as Supi and names উৎস (Uts) as its creator. The Gemini API key remains in Render's server environment and is never sent to the app. Existing text chat and memory routes are retained with Supi identity.
 
 ## Render environment variables
 
