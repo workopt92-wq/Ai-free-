@@ -10,7 +10,10 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 10000;
 const API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-const LIVE_MODEL = process.env.LIVE_MODEL || "models/gemini-3.1-flash-live-preview";
+const configuredLiveModel = process.env.LIVE_MODEL || "";
+const LIVE_MODEL = !configuredLiveModel || configuredLiveModel.includes("gemini-3.1-flash-live-preview")
+  ? "models/gemini-3.8-live"
+  : configuredLiveModel;
 const CLIENT_TOKEN = process.env.SUPI_CLIENT_TOKEN || "";
 const MAX_SESSIONS = Number(process.env.MAX_SESSIONS || 20);
 const MAX_SESSION_MS = Number(process.env.MAX_SESSION_MINUTES || 10) * 60_000;
@@ -42,9 +45,9 @@ app.get("/app.js", (_req, res) => {
   res.sendFile(path.join(__dirname, "app.js"));
 });
 app.get("/style.css", (_req, res) => res.sendFile(path.join(__dirname, "style.css")));
-app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "উৎস", activeSessions: activeSessions.size }));
-app.get("/healthz", (_req, res) => res.json({ ok: true, service: "supi-live", activeSessions: activeSessions.size }));
-app.get("/api/status", (_req, res) => res.json({ online: true, assistant: "Supi", creator: "উৎস", liveVoice: Boolean(API_KEY) }));
+app.get("/health", (_req, res) => res.json({ ok: true, assistant: "Supi", creator: "উৎস", liveModel: LIVE_MODEL, activeSessions: activeSessions.size }));
+app.get("/healthz", (_req, res) => res.json({ ok: true, service: "supi-live", liveModel: LIVE_MODEL, activeSessions: activeSessions.size }));
+app.get("/api/status", (_req, res) => res.json({ online: true, assistant: "Supi", creator: "উৎস", liveModel: LIVE_MODEL, liveVoice: Boolean(API_KEY) }));
 
 
 // Text chat remains available alongside the Live voice session.
@@ -99,6 +102,7 @@ wss.on("connection", (client, ip) => {
     { headers: { "x-goog-api-key": API_KEY }, maxPayload: 1024 * 1024, perMessageDeflate: false }
   );
   let hasSetup = false;
+  let setupComplete = false;
   let released = false;
   let windowStart = Date.now();
   let messages = 0;
@@ -107,6 +111,7 @@ wss.on("connection", (client, ip) => {
     if (released) return;
     released = true;
     clearTimeout(timer);
+    clearTimeout(setupTimer);
     activeSessions.delete(client);
     const remaining = Math.max(0, (sessionsByIp.get(ip) || 1) - 1);
     if (remaining) sessionsByIp.set(ip, remaining); else sessionsByIp.delete(ip);
@@ -116,6 +121,13 @@ wss.on("connection", (client, ip) => {
     if (upstream.readyState < WebSocket.CLOSING) upstream.close(code, reason.slice(0, 120));
   };
   const timer = setTimeout(() => closeBoth(4008, "Session time limit reached"), MAX_SESSION_MS);
+  const setupTimer = setTimeout(() => {
+    if (setupComplete) return;
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ error: { message: `Gemini Live setup timed out on ${LIVE_MODEL}. Check the server API key, Live API access, and deployment logs.` } }));
+    }
+    closeBoth(1011, "Gemini Live setup timed out");
+  }, 20_000);
   client.on("message", (data, isBinary) => {
     if (Date.now() - windowStart >= 1000) { windowStart = Date.now(); messages = 0; }
     if (++messages > 120) return closeBoth(1008, "Message rate limit exceeded");
@@ -142,10 +154,20 @@ wss.on("connection", (client, ip) => {
     while (pending.length && upstream.readyState === WebSocket.OPEN) upstream.send(pending.shift());
   });
   upstream.on("message", (data, isBinary) => {
+    if (!isBinary) {
+      try { if (JSON.parse(data.toString()).setupComplete) { setupComplete = true; clearTimeout(setupTimer); } }
+      catch {}
+    }
     if (client.readyState === WebSocket.OPEN) client.send(data, { binary: isBinary });
   });
-  upstream.on("error", () => closeBoth(1011, "Live AI upstream unavailable"));
+  upstream.on("error", error => {
+    console.error("Gemini Live upstream error:", error.message);
+    closeBoth(1011, "Live AI upstream unavailable");
+  });
   upstream.on("close", (code, reason) => {
+    if (!setupComplete && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ error: { message: `Gemini Live closed before setup completed (${code}): ${reason.toString().slice(0, 100) || "no reason provided"}` } }));
+    }
     const safeCode = [1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014].includes(code) || (code >= 3000 && code <= 4999) ? code : 1011;
     if (client.readyState < WebSocket.CLOSING) client.close(safeCode, reason.toString().slice(0, 120));
     cleanup();

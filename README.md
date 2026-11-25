@@ -7,7 +7,7 @@ Supi's hosted web UI and live voice relay. Supi identifies itself as Supi and na
 Keep the current `GEMINI_API_KEY`. Optional settings:
 
 - `GEMINI_MODEL` — text chat model (existing setting).
-- `LIVE_MODEL` — defaults to `models/gemini-3.1-flash-live-preview`.
+- `LIVE_MODEL` — defaults to `models/gemini-3.8-live`; a legacy 3.1 Flash Live value is upgraded to this model.
 - `SUPI_CLIENT_TOKEN` — optional shared app gate; if set, enter it in Supi settings.
 - `MAX_SESSIONS` — defaults to 20.
 - `MAX_SESSION_MINUTES` — defaults to 10.
